@@ -9,10 +9,11 @@ from aether.utils.postprocess_utils import camera_pose_to_raymap
 
 if __name__ == "__main__":
     metainfo_root = Path('/mnt/blob/data_v4/HistoryWarp_long_v2/')
-    metainfo_paths = list(tqdm(Path('/mnt/blob/data_v4/HistoryWarp_long_v2/worldscore_output/static/photorealistic').rglob('metainfo.json'), desc='metainfo_paths'))
+    metainfo_relpaths = Path(metainfo_root, '.metainfo_list.txt').read_text().strip().splitlines()
 
-    for metainfo_path in tqdm(metainfo_paths):
-        with open(metainfo_path, 'r') as f:
+    for metainfo_relpath in tqdm(metainfo_relpaths):
+        metainfo_abspath = Path(metainfo_root, metainfo_relpath)
+        with open(metainfo_abspath, 'r') as f:
             metainfo = json.load(f)
 
         H, W = 480, 720
@@ -26,6 +27,10 @@ if __name__ == "__main__":
             raymap_path = Path(tmpdirname, 'raymap.npy')
             np.save(raymap_path, raymap)
 
-            image_path = metainfo_path.with_name('input_image.png')
-            output_path = Path('/mnt/blob/workspace/aether', metainfo_path.relative_to(metainfo_root))
-            os.system(f'python scripts/demo.py --task prediction --image {image_path} --raymap_action {raymap_path} --output_dir {output_path} --num_frames 41')
+            image_path = metainfo_abspath.with_name('input_image.png')
+            for seed in [0, 1]:
+                output_path = Path('/mnt/blob/workspace/aether', Path(metainfo_relpath).parent, f'seed_{seed}')
+                output_path.mkdir(parents=True, exist_ok=True)
+                cmd = f'python scripts/demo.py --task prediction --image {image_path} --raymap_action {raymap_path} --output_dir {output_path} --num_frames 41'
+                print("Executing command:", cmd)
+                os.system(cmd)
