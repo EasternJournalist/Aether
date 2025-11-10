@@ -15,12 +15,14 @@ if __name__ == "__main__":
         metainfo_abspath = Path(metainfo_root, metainfo_relpath)
         with open(metainfo_abspath, 'r') as f:
             metainfo = json.load(f)
-
+        extrinsics = np.array(metainfo['camera_extrinsics'])
         H, W = 480, 720
-        frame_indices = np.linspace(0, len(metainfo['camera_extrinsics']) - 1, 41, dtype=int)
+        frame_indices = np.linspace(0, len(extrinsics) - 1, 41, dtype=int)
+        extrinsics = extrinsics[frame_indices]
+        extrinsics = extrinsics @ np.linalg.inv(extrinsics[0])
         raymap = camera_pose_to_raymap(
-            camera_pose=np.linalg.inv(metainfo['camera_extrinsics'])[frame_indices],
-            intrinsic=np.array(metainfo['camera_intrinsics'], dtype=np.float32)[frame_indices] * np.array([W, H, 1], dtype=np.float32),
+            camera_pose=np.linalg.inv(extrinsics),
+            intrinsic=np.array(metainfo['camera_intrinsics'], dtype=np.float32)[frame_indices] * np.array([W, H, 1], dtype=np.float32)[:, None],
         )
 
         with TemporaryDirectory() as tmpdirname:
