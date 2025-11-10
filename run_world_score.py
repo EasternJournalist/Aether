@@ -2,16 +2,26 @@ import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import os
+import argparse
 
 from tqdm import tqdm
 import numpy as np
 from aether.utils.postprocess_utils import camera_pose_to_raymap
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--world_size', type=int, default=None)
+    parser.add_argument('--rank', type=int, default=None)
+    args = parser.parse_args()
+
+    world_size = args.world_size
+    rank = args.rank
+
     metainfo_root = Path('/mnt/blob/data_v4/HistoryWarp_long_v2/')
     metainfo_relpaths = Path(metainfo_root, '.metainfo_list.txt').read_text().strip().splitlines()
 
-    for metainfo_relpath in tqdm(metainfo_relpaths):
+    for metainfo_relpath in tqdm(metainfo_relpaths[rank::world_size]):
         metainfo_abspath = Path(metainfo_root, metainfo_relpath)
         with open(metainfo_abspath, 'r') as f:
             metainfo = json.load(f)
