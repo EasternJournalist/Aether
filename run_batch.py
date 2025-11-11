@@ -18,7 +18,8 @@ if __name__ == "__main__":
     world_size = args.world_size
     rank = args.rank
 
-    metainfo_root = Path('/mnt/blob/data_v4/HistoryWarp_long_v2/')
+    metainfo_root = Path('/mnt/blob/data_v4/user_study_samples/')
+    output_root = Path('/mnt/blob/workspace/aether/user_study_samples')
     metainfo_relpaths = Path(metainfo_root, '.metainfo_list.txt').read_text().strip().splitlines()
 
     for metainfo_relpath in tqdm(metainfo_relpaths[rank::world_size]):
@@ -41,7 +42,7 @@ if __name__ == "__main__":
 
             image_path = metainfo_abspath.with_name('input_image.png')
             for seed in [0, 1]:
-                output_path = Path('/mnt/blob/workspace/aether', Path(metainfo_relpath).parent, f'seed_{seed}')
+                output_path = Path(output_root, Path(metainfo_relpath).parent, f'seed_{seed}')
                 output_path.mkdir(parents=True, exist_ok=True)
                 cmd = f'python scripts/demo.py --task prediction --image {image_path} --raymap_action {raymap_path} --output_dir {output_path} --num_frames 41'
                 print("Executing command:", cmd)
